@@ -1,0 +1,10 @@
+-I
+C:/Users/Jaswanth/Desktop/gps_qt_server/build
+-I
+C:/msys64/mingw64/share/qt6/qml
+--resource
+C:/Users/Jaswanth/Desktop/gps_qt_server/build/.qt/rcc/qmake_GPSViewer.qrc
+--resource
+C:/Users/Jaswanth/Desktop/gps_qt_server/build/.qt/rcc/GPSViewer_raw_qml_0.qrc
+--module
+GPSViewer
