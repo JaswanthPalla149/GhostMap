@@ -1,0 +1,56 @@
+{
+    "classes": [
+        {
+            "className": "TcpServer",
+            "lineNumber": 7,
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "name": "gpsList",
+                    "notify": "gpsUpdated",
+                    "read": "gpsList",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "TcpServer",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "gpsList",
+                            "type": "QVariantList"
+                        }
+                    ],
+                    "index": 0,
+                    "name": "gpsUpdated",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "index": 1,
+                    "name": "onNewConnection",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "TcpServer.h",
+    "outputRevision": 69
+}

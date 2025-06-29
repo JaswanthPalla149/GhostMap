@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qml/GPSViewer">
+    <file alias="qmldir">/GPSViewer/qmldir</file>
+  </qresource>
+</RCC>
+

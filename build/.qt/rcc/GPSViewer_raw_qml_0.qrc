@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qml/GPSViewer/">
+    <file alias="qml/Main.qml">C:/Users/Jaswanth/Desktop/gps_qt_server/qml/Main.qml</file>
+  </qresource>
+</RCC>
+

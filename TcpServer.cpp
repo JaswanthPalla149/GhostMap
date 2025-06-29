@@ -8,7 +8,7 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent) {
     server = new QTcpServer(this);
     connect(server, &QTcpServer::newConnection, this, &TcpServer::onNewConnection);
     if (!server->listen(QHostAddress::Any, 12345)) {
-        qWarning() << "Failed to start server:" << server->errorString();
+        qWarning() << "❌ Failed to start server:" << server->errorString();
     } else {
         qDebug() << "✅ GPS TCP Server running on port 12345";
     }
@@ -32,7 +32,7 @@ void TcpServer::onNewConnection() {
         QVariantList list;
         QJsonArray arr;
 
-        // Either accept direct array or nested JSON
+        // Accept either nested JSON object with "detections" field or raw array
         if (doc.isObject()) {
             arr = doc.object().value("detections").toArray();
         } else if (doc.isArray()) {
@@ -43,11 +43,19 @@ void TcpServer::onNewConnection() {
             QJsonObject obj = val.toObject();
             QVariantMap m;
             m["class_id"] = obj["class_id"].toString();
-            m["lat"] = obj["latitude"].toDouble();
-            m["lon"] = obj["longitude"].toDouble();
+            m["lat"] = obj["lat"].toDouble();
+            m["lon"] = obj["lon"].toDouble();
+
+            qDebug() << "👉 Raw JSON object:" << obj;
+            qDebug() << "✅ class_id:" << obj["class_id"].toString();
+            qDebug() << "✅ lat:" << obj["lat"].toDouble();
+            qDebug() << "✅ lon:" << obj["lon"].toDouble();
             list.append(m);
             qDebug() << "📍 Parsed GPS:" << m;
         }
+
+        // Store data in member variable for QML access
+        m_gpsList = list;
 
         emit gpsUpdated(list);
         qDebug() << "📤 Emitted gpsUpdated signal with" << list.size() << "items.";
