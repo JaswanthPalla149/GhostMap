@@ -56,9 +56,8 @@ void TcpServer::onNewConnection() {
 
         // Store data in member variable for QML access
         m_gpsList = list;
-
-        emit gpsUpdated(list);
-        qDebug() << "📤 Emitted gpsUpdated signal with" << list.size() << "items.";
+        emit gpsListChanged(); // Notify QML of property change
+        qDebug() << "📤 Updated gpsList with" << list.size() << "items.";
     });
 
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);

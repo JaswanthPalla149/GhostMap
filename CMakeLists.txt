@@ -1,24 +1,35 @@
 cmake_minimum_required(VERSION 3.16)
 project(GPSViewer)
 
-# 1. Find Qt6 components
-find_package(Qt6 REQUIRED COMPONENTS Core Quick)
+# Find Qt6 components
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml)
 
-# 2. Set AUTOMOC globally (critical)
+# Set AUTOMOC globally
 set(CMAKE_AUTOMOC ON)
 
-# 3. Create executable FIRST
-add_executable(GPSViewer main.cpp TcpServer.cpp TcpServer.h)
+# Create the main executable
+qt_add_executable(GPSViewer main.cpp TcpServer.cpp)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-# 4. Add QML module with minimal configuration
+# Add QML module for the main application
 qt_add_qml_module(GPSViewer
     URI GPSViewer
     VERSION 1.0
-    RESOURCE_PREFIX "/qml"  # 💡 this maps to qrc:/qml/
-    OUTPUT_DIRECTORY "${QT_QML_OUTPUT_DIRECTORY}/GPSViewer"
     QML_FILES
         qml/Main.qml
+    RESOURCE_PREFIX "/qml"
 )
 
-# 5. Link dependencies
-target_link_libraries(GPSViewer PRIVATE Qt6::Core Qt6::Quick)
+# Create the QML Components module as a separate target
+qt_add_qml_module(QmlComponentsModule
+    STATIC
+    URI QmlComponents
+    VERSION 1.0
+    QML_FILES
+        qml/QmlComponents/RasterMap.qml
+    RESOURCE_PREFIX "/qml"
+    #OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/QmlComponents
+)
+
+# Link dependencies - this is the key part!
+target_link_libraries(GPSViewer PRIVATE Qt6::Core Qt6::Quick QmlComponentsModule)
