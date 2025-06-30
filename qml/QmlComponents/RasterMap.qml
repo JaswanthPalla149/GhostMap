@@ -4,7 +4,7 @@ import QtQuick.Controls 2.15
 
 Item {
     id: root
-    property string imageSource: "C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
+    property string imageSource: "file:///C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
     property var gpsList: []
     
     // Map bounds - MUST match your GeoTIFF!
@@ -43,7 +43,8 @@ Item {
             id: imageContainer
             width: image.paintedWidth * flick.zoom
             height: image.paintedHeight * flick.zoom
-            
+
+            Component.onCompleted: console.log("imageSource =", root.imageSource)
             Image {
                 id: image
                 source: root.imageSource

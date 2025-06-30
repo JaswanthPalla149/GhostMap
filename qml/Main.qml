@@ -37,9 +37,8 @@ Window {
 
                 // Map View - Takes 70% width
                 Rectangle {
-                    Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.7
+                    Layout.preferredWidth: 0.7 * 1200
                     color: "#1a1a1a"
                     radius: 10
                     border.color: "#333"
@@ -50,14 +49,14 @@ Window {
                         anchors.fill: parent
                         anchors.margins: 5
                         gpsList: tcpServer.gpsList
-                        imageSource: "C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
+                        imageSource: "file:///C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
                     }
                 }
 
                 // GPS List View - Takes 30% width
                 ColumnLayout {
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.3
+                    Layout.preferredWidth: 0.3 * 1200
                     spacing: 10
 
                     Text {
