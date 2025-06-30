@@ -6,8 +6,8 @@ import QmlComponents 1.0
 
 Window {
     visible: true
-    width: 1200
-    height: 800
+    width: 500
+    height: 600
     x: 100
     y: 100
     title: qsTr("UAV Tracking System")
