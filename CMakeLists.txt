@@ -6,7 +6,16 @@ find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml)
 
 # Set AUTOMOC globally
 set(CMAKE_AUTOMOC ON)
+if(DEFINED ENV{PYTHON_INTERPRETER})
+    set(Python3_EXECUTABLE $ENV{PYTHON_INTERPRETER})
+endif()
 
+# Find Python >= 3.8
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+message(STATUS "✅ Found Python interpreter: ${Python3_EXECUTABLE}")
+
+find_package(pybind11 REQUIRED)
 # Create the main executable
 qt_add_executable(GPSViewer main.cpp TcpServer.cpp)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
