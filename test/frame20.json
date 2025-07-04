@@ -1,0 +1,74 @@
+[
+  {
+    "class": "soldier",
+    "bbox": {
+      "x": 103,
+      "y": 133,
+      "w": 15,
+      "h": 59
+    }
+  },
+  {
+    "class": "soldier",
+    "bbox": {
+      "x": 182,
+      "y": 94,
+      "w": 13,
+      "h": 29
+    }
+  },
+  {
+    "class": "soldier",
+    "bbox": {
+      "x": 227,
+      "y": 133,
+      "w": 21,
+      "h": 31
+    }
+  },
+  {
+    "class": "soldier",
+    "bbox": {
+      "x": 389,
+      "y": 249,
+      "w": 15,
+      "h": 87
+    }
+  },
+  {
+    "class": "soldier",
+    "bbox": {
+      "x": 410,
+      "y": 260,
+      "w": 17,
+      "h": 75
+    }
+  },
+  {
+    "class": "armed_vehicle",
+    "bbox": {
+      "x": 569,
+      "y": 59,
+      "w": 69,
+      "h": 94
+    }
+  },
+  {
+    "class": "armed_vehicle",
+    "bbox": {
+      "x": 164,
+      "y": 131,
+      "w": 140,
+      "h": 157
+    }
+  },
+  {
+    "class": "armed_vehicle",
+    "bbox": {
+      "x": 138,
+      "y": 94,
+      "w": 104,
+      "h": 137
+    }
+  }
+]
