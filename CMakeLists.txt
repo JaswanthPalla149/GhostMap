@@ -54,5 +54,5 @@ qt_add_qml_module(QmlComponentsPlugin
 # Link dependencies - this is the key part!
 target_link_libraries(GPSViewer PRIVATE Qt6::Core Qt6::Quick QmlComponentsModule QmlComponentsPlugin)
 set_target_properties(GPSViewer PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/
 )
