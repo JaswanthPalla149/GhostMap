@@ -8,6 +8,8 @@ from datetime import datetime
 
 # === Load Metadata ===
 script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "classmap.txt")
+projector.loadClassMap(config_path)
 meta_path = os.path.join(script_dir, 'meta.json')
 
 with open(meta_path, 'r') as f:
@@ -65,9 +67,9 @@ for txt_file in frame_files:
                 continue
             class_id = int(tokens[0])
             cx, cy, w, h = map(float, tokens[1:])
-            label = "armed_vehicle" if class_id == 0 else "soldier" if class_id == 2 else "civilian"
+            #label = "armed_vehicle" if class_id == 0 else "soldier" if class_id == 2 else "civilian"
             d = projector.Detection()
-            d.class_id = label
+            d.class_id = class_id
             d.x, d.y, d.w, d.h = cx, cy, w, h
             detections.append(d)
 
@@ -100,7 +102,7 @@ for txt_file in frame_files:
     # === Load and display frame with detections ===
     frame = cv2.imread(image_path)
     if frame is not None:
-        for d in detections:
+        for g, d in zip(gps_coords, detections):  # Match detection with its label & color
             abs_cx = d.x * meta.img_w
             abs_cy = d.y * meta.img_h
             abs_w = d.w * meta.img_w
@@ -111,10 +113,14 @@ for txt_file in frame_files:
             w = int(abs_w)
             h = int(abs_h)
 
-            color = (255, 0, 0) if d.class_id == "armed_vehicle" else (0, 0, 255)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-            cv2.putText(frame, d.class_id, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6, (0, 255, 255), 1)
+            # Convert hex color to BGR
+            hex_color = g.color.lstrip("#")
+            color_bgr = tuple(int(hex_color[i:i+2], 16) for i in (4, 2, 0))  # RGB to BGR
+
+            # Draw box and label
+            cv2.rectangle(frame, (x, y), (x + w, y + h), color_bgr, 2)
+            cv2.putText(frame, g.class_id, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color_bgr, 1)
+
 
         cv2.imshow("UAV Stream", frame)
         key = cv2.waitKey(500)  # 0.5 second delay between frames

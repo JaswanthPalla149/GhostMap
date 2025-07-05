@@ -1,0 +1,4 @@
+armed_vehicle #3498db
+person         #1abc9c
+soldier        #e74c3c
+vehicle        #9b59b6

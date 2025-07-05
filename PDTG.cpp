@@ -3,8 +3,12 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <unordered_map>
 
 namespace py = pybind11;
 
@@ -22,7 +26,8 @@ struct UAVMeta {
 };
 
 struct Detection {
-    std::string class_id;
+    int class_id;
+    //std::string label;
     double x; // normalized center x
     double y; // normalized center y
     double w; // normalized width
@@ -31,6 +36,7 @@ struct Detection {
 
 struct GeoCoord {
     std::string class_id;
+    std::string color;
     double lat;
     double lon;
 };
@@ -38,6 +44,37 @@ struct GeoCoord {
 inline double deg2rad(double deg) {
     return deg * M_PI / 180.0;
 }
+std::unordered_map<int, std::string> classIdToLabel;
+std::unordered_map<int, std::string> classIdToColor;
+bool loadClassMap(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open class map file: " << filepath << std::endl;
+        return false;
+    }
+
+    classIdToLabel.clear();
+    classIdToColor.clear();
+    std::string line;
+    int index = 0;
+
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string label, color;
+        iss >> label >> color;
+
+        if (!label.empty()) {
+            classIdToLabel[index] = label;
+            classIdToColor[index] = color;  // optional now
+            index++;
+        }
+    }
+
+    file.close();
+    return true;
+}
+
+
 
 // === Main function: assumes normalized input, converts to pixel coords, then GPS ===
 std::vector<GeoCoord> projectDetectionsToGPS(const std::vector<Detection>& detections, const UAVMeta& meta) {
@@ -91,8 +128,9 @@ std::vector<GeoCoord> projectDetectionsToGPS(const std::vector<Detection>& detec
         // Convert to lat/lon
         double new_lat = meta.lat + (dy / EARTH_RADIUS) * (180.0 / M_PI);
         double new_lon = meta.lon + (dx / (EARTH_RADIUS * cos(deg2rad(meta.lat)))) * (180.0 / M_PI);
-
-        output.push_back({ d.class_id, new_lat, new_lon });
+        std::string label = classIdToLabel.count(d.class_id) ? classIdToLabel[d.class_id] : "unknown";
+        std::string color = classIdToColor.count(d.class_id) ? classIdToColor[d.class_id] : "#000000";
+        output.push_back({ label, color,new_lat, new_lon });
     }
 
     return output;
@@ -121,8 +159,9 @@ PYBIND11_MODULE(projector, m) {
 
     py::class_<GeoCoord>(m, "GeoCoord")
         .def_readonly("class_id", &GeoCoord::class_id)
+        .def_readonly("color", &GeoCoord::color)
         .def_readonly("lat", &GeoCoord::lat)
         .def_readonly("lon", &GeoCoord::lon);
-
+    m.def("loadClassMap", &loadClassMap, "Load class ID to label mapping from file");
     m.def("projectDetectionsToGPS", &projectDetectionsToGPS, "Convert normalized detections to GPS");
 }
