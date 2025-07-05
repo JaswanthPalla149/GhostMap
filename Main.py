@@ -78,6 +78,7 @@ for txt_file in frame_files:
     # Prepare JSON data in the format QML expects
     json_data = [{
         "class_id": g.class_id,
+        "color": g.color,
         "lat": g.lat,
         "lon": g.lon,
         "timestamp": datetime.now().isoformat()  # Add timestamp

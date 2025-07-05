@@ -234,12 +234,26 @@ Item {
                         // Center the marker on the coordinate
                         anchors.centerIn: parent
                         
-                        // Color based on GPS data
+                        // Use color from GPS data, with fallback to default colors
                         color: {
-                            if (modelData.class_id && modelData.class_id.includes("vehicle"))
-                                return "#3498db" // Blue for vehicles
-                            else
-                                return "#e74c3c" // Red for other objects
+                            // Primary: Use color from class map if available
+                            if (modelData.color && modelData.color !== "") {
+                                return modelData.color
+                            }
+                            // Fallback: Use class_id based colors (legacy support)
+                            else if (modelData.class_id) {
+                                switch(modelData.class_id) {
+                                    case "armed_vehicle": return "#3498db"
+                                    case "person": return "#1abc9c"
+                                    case "soldier": return "#e74c3c"
+                                    case "vehicle": return "#9b59b6"
+                                    default: return "#95a5a6" // Gray for unknown
+                                }
+                            }
+                            // Final fallback: Default red
+                            else {
+                                return "#e74c3c"
+                            }
                         }
                         
                         border.color: "white"
@@ -263,21 +277,61 @@ Item {
                             
                             onEntered: {
                                 marker.scale = 1.2
+                                // Show tooltip with class info
+                                tooltip.visible = true
                             }
                             
                             onExited: {
                                 marker.scale = 1.0
+                                tooltip.visible = false
                             }
                             
-                            // Show tooltip on click (optional)
+                            // Show detailed info on click
                             onClicked: {
-                                console.log("GPS Point:", modelData.lat, modelData.lon, modelData.class_id)
+                                console.log("GPS Point Details:")
+                                console.log("- Class:", modelData.class_id)
+                                console.log("- Color:", modelData.color)
+                                console.log("- Coordinates:", modelData.lat, modelData.lon)
+                                console.log("- Timestamp:", modelData.timestamp)
                             }
                         }
                         
                         // Smooth scaling animation
                         Behavior on scale {
                             NumberAnimation { duration: 150 }
+                        }
+                    }
+                    
+                    // Tooltip for showing class information
+                    Rectangle {
+                        id: tooltip
+                        visible: false
+                        x: marker.x + marker.width + 5
+                        y: marker.y - height/2
+                        width: tooltipText.width + 10
+                        height: tooltipText.height + 6
+                        color: "black"
+                        opacity: 0.8
+                        radius: 3
+                        z: 1000
+                        
+                        Text {
+                            id: tooltipText
+                            anchors.centerIn: parent
+                            text: modelData.class_id || "Unknown"
+                            color: "white"
+                            font.pixelSize: Math.max(8, 10 / currentZoom)
+                        }
+                        
+                        // Arrow pointing to marker
+                        Rectangle {
+                            width: 6
+                            height: 6
+                            x: -3
+                            y: parent.height/2 - 3
+                            rotation: 45
+                            color: parent.color
+                            opacity: parent.opacity
                         }
                     }
                 }
@@ -331,6 +385,75 @@ Item {
             text: "Zoom: " + (currentZoom * 100).toFixed(0) + "%"
             color: "white"
             font.pixelSize: 12
+        }
+    }
+    
+    // Legend for class colors (optional)
+    Rectangle {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 10
+        width: legendColumn.width + 20
+        height: legendColumn.height + 20
+        color: "black"
+        opacity: 0.8
+        radius: 5
+        visible: root.gpsList.length > 0
+        
+        Column {
+            id: legendColumn
+            anchors.centerIn: parent
+            spacing: 5
+            
+            Text {
+                text: "Legend"
+                color: "white"
+                font.pixelSize: 10
+                font.bold: true
+            }
+            
+            // Generate legend based on unique classes in gpsList
+            Repeater {
+                model: {
+                    var uniqueClasses = {}
+                    for (var i = 0; i < root.gpsList.length; i++) {
+                        var item = root.gpsList[i]
+                        if (item.class_id && !uniqueClasses[item.class_id]) {
+                            uniqueClasses[item.class_id] = item.color || "#95a5a6"
+                        }
+                    }
+                    
+                    var result = []
+                    for (var className in uniqueClasses) {
+                        result.push({
+                            name: className,
+                            color: uniqueClasses[className]
+                        })
+                    }
+                    return result
+                }
+                
+                delegate: Row {
+                    spacing: 5
+                    
+                    Rectangle {
+                        width: 8
+                        height: 8
+                        radius: 4
+                        color: modelData.color
+                        border.color: "white"
+                        border.width: 1
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    
+                    Text {
+                        text: modelData.name
+                        color: "white"
+                        font.pixelSize: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
         }
     }
 }
