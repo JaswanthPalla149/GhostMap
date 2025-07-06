@@ -6,10 +6,10 @@
   },
   "configurePresets": [
     {
-      "name": "mingw64",
-      "displayName": "MSYS2 MinGW64",
+      "name": "mingw64-release",
+      "displayName": "Windows MSYS2 MinGW64 Release",
       "generator": "MinGW Makefiles",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build/windows-release",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -27,10 +27,31 @@
       }
     },
     {
-      "name": "linux-gcc",
-      "displayName": "Linux GCC",
+      "name": "mingw64-debug",
+      "displayName": "Windows MSYS2 MinGW64 Debug",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/windows-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
+        "CMAKE_PREFIX_PATH": "C:/msys64/mingw64/lib/cmake"
+      },
+      "environment": {
+        "PATH": "C:/msys64/mingw64/bin;C:/msys64/usr/bin;C:/Windows/System32;C:/Windows",
+        "QT_PLUGIN_PATH": "C:/msys64/mingw64/lib/qt6/plugins"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux GCC Release",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build/linux-release",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -38,6 +59,27 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_PREFIX_PATH": "/usr/lib/x86_64-linux-gnu/cmake"
+      },
+      "environment": {
+        "PATH": "/usr/bin:/bin:/usr/local/bin",
+        "QT_PLUGIN_PATH": "/usr/lib/x86_64-linux-gnu/qt6/plugins"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux GCC Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/linux-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "/usr/bin/gcc",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++",
         "CMAKE_PREFIX_PATH": "/usr/lib/x86_64-linux-gnu/cmake"
