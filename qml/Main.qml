@@ -12,6 +12,38 @@ Window {
     y: 100
     title: qsTr("UAV Tracking System")
 
+    Component.onCompleted: setupPrompt.open()
+
+    SetupDialog {
+        id: setupPrompt
+
+        onAccepted: (lat, lon, radius, path) => {
+            console.log("Received from SetupDialog:", "Lat:", lat, "Lon:", lon, "Radius:", radius, "Path:", path)
+            if (isNaN(lat) || isNaN(lon) || isNaN(radius)) {
+                console.error("Invalid input(s):", lat, lon, radius)
+                return
+            }
+            const deltaLat = radius / 111320
+            const deltaLon = radius / (111320 * Math.cos(lat * Math.PI / 180))
+            console.log("This message will appear in the console.")
+            mapDisplay.mapMinLat = lat - deltaLat
+            mapDisplay.mapMaxLat = lat + deltaLat
+            mapDisplay.mapMinLon = lon - deltaLon
+            mapDisplay.mapMaxLon = lon + deltaLon
+            console.log("Final geo bounds:")
+            console.log("mapMinLat:", mapDisplay.mapMinLat)
+            console.log("mapMaxLat:", mapDisplay.mapMaxLat)
+            console.log("mapMinLon:", mapDisplay.mapMinLon)
+            console.log("mapMaxLon:", mapDisplay.mapMaxLon)
+            if (path && path !== "") {
+                console.log("Setting imageSource to:", path)
+                mapDisplay.imageSource = path.toString()
+            } else {
+                console.warn("No image selected. Skipping image update.")
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#121212"
@@ -46,7 +78,7 @@ Window {
                     anchors.fill: parent
                     anchors.margins: 5
                     gpsList: tcpServer.gpsList
-                    imageSource: "file:///C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
+                    imageSource: ""
                 }
             }
 
@@ -87,18 +119,18 @@ Window {
 
     // Count logic
     property int soldierCount: {
-        let count = 0;
+        let count = 0
         for (let i = 0; i < tcpServer.gpsList.length; i++) {
-            if (tcpServer.gpsList[i].class_id.includes("soldier")) count++;
+            if (tcpServer.gpsList[i].class_id.includes("soldier")) count++
         }
-        return count;
+        return count
     }
 
     property int vehicleCount: {
-        let count = 0;
+        let count = 0
         for (let i = 0; i < tcpServer.gpsList.length; i++) {
-            if (tcpServer.gpsList[i].class_id.includes("vehicle")) count++;
+            if (tcpServer.gpsList[i].class_id.includes("vehicle")) count++
         }
-        return count;
+        return count
     }
 }

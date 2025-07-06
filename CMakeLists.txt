@@ -36,6 +36,7 @@ qt_add_qml_module(QmlComponentsModule
     VERSION 1.0
     QML_FILES
         qml/QmlComponents/RasterMap.qml
+        qml/QmlComponents/SetupDialog.qml 
     RESOURCE_PREFIX "/qml"
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/QmlComponents
 )

@@ -5,15 +5,19 @@ import QtQuick.Layouts 1.15
 
 Item {
     id: root
-    property string imageSource: "file:///C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
+    //property string imageSource: "file:///C:/Users/Jaswanth/Desktop/gps_qt_server/satellite_bangalore.png"
+    property string imageSource: ""
     property var gpsList: []
 
     // Geo bounds - must match the satellite image
-    property real mapMinLat: 12.892001120137328
-    property real mapMaxLat: 12.928005596724839
-    property real mapMinLon: 77.57168074040256
-    property real mapMaxLon: 77.60837691975884
-
+    //property real mapMinLat: 12.892001120137328
+    //property real mapMaxLat: 12.928005596724839
+    //property real mapMinLon: 77.57168074040256
+    //property real mapMaxLon: 77.60837691975884
+    property real mapMinLat: 0
+    property real mapMaxLat: 0
+    property real mapMinLon: 0
+    property real mapMaxLon: 0
     // Zoom settings
     property real minZoom: 0.5
     property real maxZoom: 10.0

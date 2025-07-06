@@ -1,2 +1,3 @@
 module QmlComponents
 RasterMap 1.0 RasterMap.qml
+SetupDialog 1.0 SetupDialog.qml
