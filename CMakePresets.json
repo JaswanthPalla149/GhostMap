@@ -19,7 +19,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH": "C:/msys64/mingw64"
+        "CMAKE_PREFIX_PATH": "C:/msys64/mingw64/lib/cmake"
       },
       "environment": {
         "PATH": "C:/msys64/mingw64/bin;C:/msys64/usr/bin;C:/Windows/System32;C:/Windows",

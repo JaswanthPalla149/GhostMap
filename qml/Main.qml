@@ -41,6 +41,7 @@ Window {
             } else {
                 console.warn("No image selected. Skipping image update.")
             }
+            FlagWriter.writeFlag("gps_ready.flag")
         }
     }
 

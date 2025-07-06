@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(GPSViewer)
-
+# Point this to your actual Qt installation
+set(Qt_DIR "C:/Qt/6.5.2/mingw_64/lib/cmake/Qt6")
 # Find Qt6 components
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml)
 
@@ -17,7 +18,7 @@ message(STATUS "✅ Found Python interpreter: ${Python3_EXECUTABLE}")
 
 find_package(pybind11 REQUIRED)
 # Create the main executable
-qt_add_executable(GPSViewer main.cpp TcpServer.cpp)
+qt_add_executable(GPSViewer main.cpp TcpServer.cpp ReadyFlagWriter.cpp)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 # Add QML module for the main application

@@ -4,6 +4,14 @@ import cv2
 import projector
 import socket
 import time
+
+flag_path = "gps_ready.flag"
+print("⏳ Waiting for GPSViewer to set lat, long, and image...")
+
+while not os.path.exists(flag_path):
+    time.sleep(0.5)
+
+print("✅ Setup complete. Proceeding...")
 from datetime import datetime
 
 # === Load Metadata ===
