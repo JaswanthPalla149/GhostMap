@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     engine.addImportPath("qrc:/qml");
     TcpServer server;
     ReadyFlagWriter flagWriter;
+    flagWriter.setUnready();
     engine.rootContext()->setContextProperty("tcpServer", &server);
     qDebug() << "GPS TCP Server running on port 12345";
     //engine.load(QUrl(QStringLiteral("qrc:/qml/GPSViewer/qml/Main.qml")));
