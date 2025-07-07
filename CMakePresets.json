@@ -88,6 +88,28 @@
         "PATH": "/usr/bin:/bin:/usr/local/bin",
         "QT_PLUGIN_PATH": "/usr/lib/x86_64-linux-gnu/qt6/plugins"
       }
+    },
+    {
+      "name": "pi-release",
+      "displayName": "Raspberry Pi Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/pi-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_PREFIX_PATH": "/usr/lib/aarch64-linux-gnu/cmake"
+      },
+      "environment": {
+        "PATH": "/usr/bin:/bin:/usr/local/bin",
+        "QT_PLUGIN_PATH": "/usr/lib/aarch64-linux-gnu/qt6/plugins",
+        "QML_IMPORT_PATH": "/usr/lib/aarch64-linux-gnu/qt6/qml"
+      }
     }
   ]
 }

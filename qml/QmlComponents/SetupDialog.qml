@@ -1,3 +1,4 @@
+//SetupDialog.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -8,7 +9,7 @@ Popup {
     modal: true
     focus: true
     width: 400
-    height: 500
+    height: 550
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     property real lat: 0
@@ -24,7 +25,7 @@ Popup {
         spacing: 15
 
         Label {
-            text: "Map Setup"
+            text: "🗺️ Map Setup"
             font.pixelSize: 20
             Layout.alignment: Qt.AlignHCenter
         }
@@ -34,11 +35,11 @@ Popup {
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             onTextChanged: {
                 const value = parseFloat(text)
-                console.log("Latitude input:", text, "Parsed:", value)
                 if (!isNaN(value)) {
                     setupDialog.lat = value
+                    console.log("Latitude input:", text, "Parsed:", value)
                 } else {
-                    console.warn("Invalid latitude")
+                    console.warn("Invalid latitude input:", text)
                 }
             }
         }
@@ -48,11 +49,11 @@ Popup {
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             onTextChanged: {
                 const value = parseFloat(text)
-                console.log("Longitude input:", text, "Parsed:", value)
                 if (!isNaN(value)) {
                     setupDialog.lon = value
+                    console.log("Longitude input:", text, "Parsed:", value)
                 } else {
-                    console.warn("Invalid longitude")
+                    console.warn("Invalid longitude input:", text)
                 }
             }
         }
@@ -63,25 +64,39 @@ Popup {
             inputMethodHints: Qt.ImhDigitsOnly
             onTextChanged: {
                 const value = parseInt(text)
-                console.log("Radius input:", text, "Parsed:", value)
                 if (!isNaN(value)) {
                     setupDialog.radius = value
+                    console.log("Radius input:", text, "Parsed:", value)
                 } else {
-                    console.warn("Invalid radius")
+                    console.warn("Invalid radius input:", text)
                 }
             }
         }
 
+        TextField {
+            id: manualPath
+            placeholderText: "Enter image path manually (e.g. /home/pi/map.jpg)"
+            text: setupDialog.imagePath
+            onTextChanged: {
+                setupDialog.imagePath = text
+                console.log("Manual image path set to:", text)
+            }
+        }
+
         Button {
-            text: "Choose Satellite Image"
+            text: "Choose Satellite Image (if supported)"
             onClicked: {
                 console.log("Opening file dialog...")
-                fileDialog.open()
+                try {
+                    fileDialog.open()
+                } catch (e) {
+                    console.warn("FileDialog not supported:", e)
+                }
             }
         }
 
         Label {
-            text: imagePath !== "" ? "Selected: " + imagePath : "No image selected"
+            text: setupDialog.imagePath !== "" ? "Selected: " + setupDialog.imagePath : "No image selected"
             wrapMode: Text.Wrap
             color: "#bbbbbb"
         }
@@ -92,20 +107,16 @@ Popup {
             folder: StandardPaths.pictures
             nameFilters: ["Images (*.png *.jpg *.jpeg)"]
             onAccepted: {
-                // For Qt.labs.platform FileDialog, use 'file' property instead of 'fileUrl'
                 var selectedFile = fileDialog.file
-                console.log("FileDialog.file:", selectedFile)
-                
                 if (selectedFile && selectedFile !== "") {
                     setupDialog.imagePath = selectedFile
-                    console.log("Image path set to:", selectedFile)
+                    manualPath.text = selectedFile
+                    console.log("Image path set via dialog:", selectedFile)
                 } else {
-                    console.warn("No valid file selected!")
-                    setupDialog.imagePath = ""
+                    console.warn("No valid file selected.")
                 }
             }
         }
-
 
         RowLayout {
             Layout.alignment: Qt.AlignRight
