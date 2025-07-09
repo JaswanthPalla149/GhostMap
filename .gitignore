@@ -5,3 +5,4 @@ projector.cp312-win_amd64.pyd
 .vscode
 PDTG.exe
 *.so
+gps_ready.flag

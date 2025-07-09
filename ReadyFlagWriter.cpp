@@ -29,5 +29,5 @@ void ReadyFlagWriter::setReady() {
 
 void ReadyFlagWriter::setUnready() {
     std::cout<<"Hi in Unready"<<std::endl;
-    writeFlag("unready");
+    writeFlag("No");
 }
