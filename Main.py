@@ -154,7 +154,7 @@ for txt_file in frame_files:
             cv2.putText(frame, str(g.class_id), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color_bgr, 1)
 
         cv2.imshow("UAV Stream", frame)
-        key = cv2.waitKey(500)
+        key = cv2.waitKey(150)
         if key == 27:  # ESC
             break
 
