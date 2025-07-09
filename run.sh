@@ -19,6 +19,7 @@ echo "✅ [OK] Current directory: $(pwd)"
 GPSVIEWER_EXE="./build/GPSViewer_App.exe"
 PYTHON_SCRIPT="./Main.py"
 FLAG_PATH="./gps_ready.flag"
+echo "No" > "./gps_ready.flag"
 
 # === Check Python is available ===
 if ! command -v python &>/dev/null && ! command -v py &>/dev/null; then

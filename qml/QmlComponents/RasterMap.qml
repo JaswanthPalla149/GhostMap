@@ -28,11 +28,11 @@ Item {
 
     // Coordinate conversion functions
     function toMapX(lon) {
-        return (lon - mapMinLon) / (mapMaxLon - mapMinLon) * image.sourceSize.width
+        return (lon - mapMinLon) / (mapMaxLon - mapMinLon) * mapContent.width
     }
 
     function toMapY(lat) {
-        return (mapMaxLat - lat) / (mapMaxLat - mapMinLat) * image.sourceSize.height
+        return (mapMaxLat - lat) / (mapMaxLat - mapMinLat) * mapContent.height
     }
 
     // Zoom functions
@@ -185,20 +185,24 @@ Item {
         // Map content container
         Item {
             id: mapContent
-            width: image.sourceSize.width * currentZoom
-            height: image.sourceSize.height * currentZoom
+            width: (image.status === Image.Ready ? image.sourceSize.width : 500) * currentZoom
+            height: (image.status === Image.Ready ? image.sourceSize.height : 500) * currentZoom
 
-            // Satellite image
+
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"  // fallback background
+
             Image {
                 id: image
                 anchors.fill: parent
                 source: root.imageSource.startsWith("file://") ? root.imageSource : "file://" + root.imageSource
                 fillMode: Image.Stretch
-                smooth: currentZoom < 2.0 // Disable smoothing at high zoom for performance
+                smooth: currentZoom < 2.0
                 asynchronous: true
                 cache: true
-               
-                // Show loading indicator
+
                 Rectangle {
                     anchors.centerIn: parent
                     width: 100
@@ -207,7 +211,7 @@ Item {
                     border.color: "gray"
                     radius: 5
                     visible: image.status === Image.Loading
-                   
+
                     Text {
                         anchors.centerIn: parent
                         text: "Loading..."
@@ -215,6 +219,8 @@ Item {
                     }
                 }
             }
+        }
+
 
             // GPS points overlay
             Repeater {
@@ -227,6 +233,7 @@ Item {
                     // Position based on coordinates
                     x: root.toMapX(modelData.lon) * currentZoom
                     y: root.toMapY(modelData.lat) * currentZoom
+
                    
                     // GPS marker
                     Rectangle {
