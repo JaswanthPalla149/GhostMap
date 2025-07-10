@@ -18,8 +18,9 @@ echo "✅ [OK] Current directory: $(pwd)"
 # === Set absolute paths ===
 GPSVIEWER_EXE="./build/GPSViewer_App.exe"
 PYTHON_SCRIPT="./Main.py"
+SIM_SCRIPT="./sim.py"
 FLAG_PATH="./gps_ready.flag"
-echo "No" > "./gps_ready.flag"
+echo "No" > "$FLAG_PATH"
 
 # === Check Python is available ===
 if ! command -v python &>/dev/null && ! command -v py &>/dev/null; then
@@ -28,37 +29,27 @@ if ! command -v python &>/dev/null && ! command -v py &>/dev/null; then
 fi
 echo "✅ [OK] Python is available in PATH"
 
-# === Check Main.py exists ===
-if [[ ! -f "$PYTHON_SCRIPT" ]]; then
-    echo "❌ [ERROR] Main.py not found at: $PYTHON_SCRIPT"
-    exit 1
-fi
-echo "✅ [OK] Main.py found"
-
-# === Check GPSViewer ===
-if [[ ! -f "$GPSVIEWER_EXE" ]]; then
-    echo "❌ [ERROR] GPSViewer.exe not found at: $GPSVIEWER_EXE"
-    exit 1
-fi
-echo "✅ [OK] GPSViewer.exe found"
-
-
+# === Check required files ===
+[[ ! -f "$PYTHON_SCRIPT" ]] && { echo "❌ [ERROR] Main.py not found at: $PYTHON_SCRIPT"; exit 1; }
+[[ ! -f "$SIM_SCRIPT" ]] && { echo "❌ [ERROR] sim.py not found at: $SIM_SCRIPT"; exit 1; }
+[[ ! -f "$GPSVIEWER_EXE" ]] && { echo "❌ [ERROR] GPSViewer.exe not found at: $GPSVIEWER_EXE"; exit 1; }
+echo "✅ [OK] All required files found"
 
 # === Launch GPSViewer ===
 echo "🚀 [LAUNCH] Starting GPSViewer.exe..."
 start "" "$GPSVIEWER_EXE"
 
-# === Wait until gps_ready.flag contains "ready" ===
-echo "⏳ [WAIT] Waiting for GPSViewer to write 'ready' into gps_ready.flag..."
+# === Wait for gps_ready.flag ===
+echo "⏳ [WAIT] Waiting for gps_ready.flag = 'ready'..."
 while true; do
     if [[ -f "$FLAG_PATH" ]] && grep -q "ready" "$FLAG_PATH"; then
-        echo "✅ [OK] gps_ready.flag detected with 'ready'"
+        echo "✅ [OK] gps_ready.flag detected"
         break
     fi
     sleep 1
 done
 
-# === Convert mode to format ===
+# === Convert MODE to input format ===
 if [[ "$MODE" == "nc-y" ]]; then
     FORMAT_ARG="--input_format nc-yolo"
     echo "🟨 [MODE] NO-confidence YOLO mode (class cx cy w h)"
@@ -67,12 +58,34 @@ else
     echo "🟩 [MODE] CONFIDENCE XYXY mode (class conf x1 y1 x2 y2)"
 fi
 
-# === Launch Main.py with default python ===
+# === Launch Main.py in background ===
 echo "🚀 [LAUNCH] Starting Main.py..."
 if command -v python &>/dev/null; then
-    python "$PYTHON_SCRIPT" $FORMAT_ARG
+    python "$PYTHON_SCRIPT" $FORMAT_ARG &
+    MAIN_PID=$!
 else
-    py "$PYTHON_SCRIPT" $FORMAT_ARG
+    py "$PYTHON_SCRIPT" $FORMAT_ARG &
+    MAIN_PID=$!
 fi
+
+# === Delay to let Main.py start receiver socket ===
+sleep 2
+
+# === Launch sim.py in background ===
+echo "🚀 [LAUNCH] Starting sim.py..."
+if command -v python &>/dev/null; then
+    python "$SIM_SCRIPT" &
+    SIM_PID=$!
+else
+    py "$SIM_SCRIPT" &
+    SIM_PID=$!
+fi
+
+# === Wait for Main.py to exit ===
+wait $MAIN_PID
+echo "✅ Main.py finished."
+
+# === Kill sim.py if it's still running ===
+kill $SIM_PID 2>/dev/null
 
 echo "🎯 [DONE] UAV pipeline completed."
