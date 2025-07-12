@@ -2,10 +2,16 @@
 
 MODE=$1
 echo "🟡 [INFO] UAV System Build Launcher Starting..."
-
+VIDEO_STREAM=$2
 # === Validate mode ===
 if [[ "$MODE" != "nc-y" && "$MODE" != "c-o" ]]; then
     echo "❌ [ERROR] Invalid mode. Usage: ./run.sh nc-y  OR  ./run.sh c-o"
+    exit 1
+fi
+
+# === Validate video flag ===
+if [[ "$VIDEO_STREAM" != "show" && "$VIDEO_STREAM" != "no-show" ]]; then
+    echo "❌ [ERROR] Invalid video stream option. Usage: ./run.sh nc-y show  OR  ./run.sh c-o no-show"
     exit 1
 fi
 
@@ -58,13 +64,22 @@ else
     echo "🟩 [MODE] CONFIDENCE XYXY mode (class conf x1 y1 x2 y2)"
 fi
 
+# === Set Video flag ===
+if [[ "$VIDEO_STREAM" == "show" ]]; then
+    VIDEO_ARG="--video_stream true"
+    echo "📽️ [VIDEO] Displaying UAV video stream"
+else
+    VIDEO_ARG="--video_stream false"
+    echo "❎ [VIDEO] UAV video stream disabled"
+fi
+
 # === Launch Main.py in background ===
 echo "🚀 [LAUNCH] Starting Main.py..."
 if command -v python &>/dev/null; then
-    python "$PYTHON_SCRIPT" $FORMAT_ARG &
+    python "$PYTHON_SCRIPT" $FORMAT_ARG $VIDEO_ARG &
     MAIN_PID=$!
 else
-    py "$PYTHON_SCRIPT" $FORMAT_ARG &
+    py "$PYTHON_SCRIPT" $FORMAT_ARG $VIDEO_ARG &
     MAIN_PID=$!
 fi
 
