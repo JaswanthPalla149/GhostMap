@@ -52,13 +52,11 @@ recv_server.listen(1)
 recv_server.settimeout(1.0)
 print("🚦 Waiting for drone/sim on port 9999...")
 
-# === Setup OpenCV window if needed ===
 if SHOW_VIDEO:
     cv2.namedWindow("UAV Stream", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("UAV Stream", 640, 640)
     cv2.moveWindow("UAV Stream", 600, 100)
 
-# === Helper to receive fixed bytes ===
 def receive_all(sock, size):
     data = b''
     while len(data) < size:
@@ -76,13 +74,11 @@ packet_index = 0
 try:
     while True:
         try:
-            # Accept connection with timeout
             try:
                 conn, addr = recv_server.accept()
                 conn.settimeout(1.0)
                 print(f"🛰️ Drone/sim connected from {addr}")
             except socket.timeout:
-                # FIXED: Only check OpenCV window if video is enabled
                 if SHOW_VIDEO and cv2.getWindowProperty("UAV Stream", cv2.WND_PROP_VISIBLE) < 1:
                     print("🛑 UAV window closed.")
                     break
@@ -101,8 +97,12 @@ try:
                     meta_data = header['meta']
                     detections_raw = header['detections']
 
-                    img_bytes = receive_all(conn, img_size)
-                    frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+                    frame = None
+                    if SHOW_VIDEO and img_size > 0:
+                        img_bytes = receive_all(conn, img_size)
+                        frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+                    elif not SHOW_VIDEO and img_size > 0:
+                        _ = receive_all(conn, img_size)  # Just discard the image bytes
 
                     meta = projector.UAVMeta()
                     meta.lat = meta_data['latitude']
@@ -157,8 +157,7 @@ try:
                         ghostmap_client.close()
                         ghostmap_client = connect_to_ghostmap()
 
-                    # === If video stream is enabled, draw and show ===
-                    if SHOW_VIDEO:
+                    if SHOW_VIDEO and frame is not None:
                         for g, d in zip(gps_coords, detections):
                             abs_cx = d.x * meta.img_w
                             abs_cy = d.y * meta.img_h
@@ -179,7 +178,6 @@ try:
 
                         cv2.imshow("UAV Stream", frame)
                         if cv2.getWindowProperty("UAV Stream", cv2.WND_PROP_VISIBLE) < 1:
-                            print("🛑 UAV window closed.")
                             raise KeyboardInterrupt
                         key = cv2.waitKey(150)
                         if key == 27:
@@ -192,9 +190,7 @@ try:
                     conn.close()
                     break
                 except socket.timeout:
-                    # FIXED: Only check OpenCV window if video is enabled
                     if SHOW_VIDEO and cv2.getWindowProperty("UAV Stream", cv2.WND_PROP_VISIBLE) < 1:
-                        print("🛑 UAV window closed.")
                         raise KeyboardInterrupt
                     if SHOW_VIDEO:
                         key = cv2.waitKey(50)
