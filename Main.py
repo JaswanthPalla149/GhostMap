@@ -7,8 +7,9 @@ import time
 import argparse
 import numpy as np
 from datetime import datetime
+from time import perf_counter
 
-# === Parse args ===
+# === Parse arguments ===
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_format', choices=['nc-yolo', 'conf-xyxy'], required=True)
 parser.add_argument('--video_stream', type=str, default='true', choices=['true', 'false'])
@@ -16,27 +17,28 @@ args = parser.parse_args()
 
 SHOW_VIDEO = args.video_stream == 'true'
 
-# === Wait for gps_ready.flag ===
+# === Wait for GPS flag ===
 flag_path = "gps_ready.flag"
-print("⏳ Waiting for GPSViewer to set lat, long, and image...")
+print("Waiting for GPSViewer to set lat, long, and image...")
 while not os.path.exists(flag_path):
     time.sleep(0.5)
-print("✅ Setup complete. Proceeding...")
+print("Setup complete. Proceeding...")
 
-# === Load classmap ===
+# === Load class map ===
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(script_dir, "classmap.txt")
 projector.loadClassMap(config_path)
 
-# === Connect to GhostMap TCP ===
+# === Connect to GhostMap ===
 tcp_ip = "127.0.0.1"
 tcp_port = 12345
+
 def connect_to_ghostmap():
     while True:
         try:
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect((tcp_ip, tcp_port))
-            print(f"✅ Connected to GhostMap at {tcp_ip}:{tcp_port}")
+            print(f"Connected to GhostMap at {tcp_ip}:{tcp_port}")
             return client
         except Exception as e:
             print("Retrying GhostMap connection...", e)
@@ -44,19 +46,21 @@ def connect_to_ghostmap():
 
 ghostmap_client = connect_to_ghostmap()
 
-# === TCP Server to receive from drone/sim ===
+# === TCP server to receive from drone/sim ===
 recv_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 recv_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 recv_server.bind(('0.0.0.0', 9999))
 recv_server.listen(1)
 recv_server.settimeout(1.0)
-print("🚦 Waiting for drone/sim on port 9999...")
+print("Waiting for drone/sim on port 9999...")
 
+# === Setup OpenCV window if enabled ===
 if SHOW_VIDEO:
     cv2.namedWindow("UAV Stream", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("UAV Stream", 640, 640)
     cv2.moveWindow("UAV Stream", 600, 100)
 
+# === Reliable byte receiver ===
 def receive_all(sock, size):
     data = b''
     while len(data) < size:
@@ -70,6 +74,7 @@ def receive_all(sock, size):
     return data
 
 packet_index = 0
+total_processing_time = 0.0
 
 try:
     while True:
@@ -77,33 +82,35 @@ try:
             try:
                 conn, addr = recv_server.accept()
                 conn.settimeout(1.0)
-                print(f"🛰️ Drone/sim connected from {addr}")
+                print(f"Drone/sim connected from {addr}")
             except socket.timeout:
                 if SHOW_VIDEO and cv2.getWindowProperty("UAV Stream", cv2.WND_PROP_VISIBLE) < 1:
-                    print("🛑 UAV window closed.")
                     break
                 if SHOW_VIDEO:
                     key = cv2.waitKey(50)
                     if key == 27:
-                        print("🛑 ESC pressed. Exiting.")
                         break
                 continue
 
             while True:
                 try:
+                    frame_start = perf_counter()
+
+                    # === Receive header ===
                     header_bytes = receive_all(conn, 1024)
                     header = json.loads(header_bytes.decode().strip())
                     img_size = header['image_size']
                     meta_data = header['meta']
                     detections_raw = header['detections']
 
+                    # === Image Handling ===
                     frame = None
-                    if SHOW_VIDEO and img_size > 0:
+                    if img_size > 0:
                         img_bytes = receive_all(conn, img_size)
-                        frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
-                    elif not SHOW_VIDEO and img_size > 0:
-                        _ = receive_all(conn, img_size)  # Just discard the image bytes
+                        if SHOW_VIDEO:
+                            frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
 
+                    # === Metadata setup ===
                     meta = projector.UAVMeta()
                     meta.lat = meta_data['latitude']
                     meta.lon = meta_data['longitude']
@@ -114,6 +121,7 @@ try:
                     meta.img_w = meta_data['image_width']
                     meta.img_h = meta_data['image_height']
 
+                    # === Parse detections ===
                     detections = []
                     for d in detections_raw:
                         if args.input_format == 'nc-yolo':
@@ -134,29 +142,34 @@ try:
                         det.h = h
                         detections.append(det)
 
+                    # === Project to GPS ===
                     gps_coords = projector.projectDetectionsToGPS(detections, meta)
 
-                    json_data = [{
-                        "class_id": g.class_id,
-                        "color": g.color,
-                        "lat": g.lat,
-                        "lon": g.lon,
-                        "timestamp": datetime.now().isoformat()
-                    } for g in gps_coords]
+                    # === Send to GhostMap (with delimiter) ===
+                    json_data = [
+                        {
+                            "class_id": g.class_id,
+                            "color": g.color,
+                            "lat": g.lat,
+                            "lon": g.lon,
+                            "timestamp": datetime.now().isoformat()
+                        } for g in gps_coords
+                    ]
 
                     print(f"\n== GPS for Packet {packet_index} ==")
                     for item in json_data:
                         print(f"{item['class_id']}: {item['lat']:.6f}, {item['lon']:.6f}")
 
                     try:
-                        message = json.dumps(json_data, separators=(',', ':'))
+                        message = json.dumps(json_data, separators=(',', ':')) + "\n"  # ← Add delimiter
                         ghostmap_client.sendall(message.encode('utf-8'))
-                        print(f"📤 Sent {len(json_data)} objects to GhostMap")
+                        print(f"Sent {len(json_data)} objects to GhostMap")
                     except Exception as e:
-                        print("🔌 GhostMap reconnecting...", e)
+                        print("GhostMap reconnecting...", e)
                         ghostmap_client.close()
                         ghostmap_client = connect_to_ghostmap()
 
+                    # === Video display ===
                     if SHOW_VIDEO and frame is not None:
                         for g, d in zip(gps_coords, detections):
                             abs_cx = d.x * meta.img_w
@@ -179,14 +192,18 @@ try:
                         cv2.imshow("UAV Stream", frame)
                         if cv2.getWindowProperty("UAV Stream", cv2.WND_PROP_VISIBLE) < 1:
                             raise KeyboardInterrupt
-                        key = cv2.waitKey(150)
+                        key = cv2.waitKey(1)
+                        pass
                         if key == 27:
                             raise KeyboardInterrupt
 
+                    frame_time = perf_counter() - frame_start
+                    print(f"⏱️ Frame {packet_index} processed in {frame_time:.3f} seconds")
+                    total_processing_time += frame_time
                     packet_index += 1
 
                 except (ConnectionError, ConnectionResetError) as e:
-                    print(f"⚠️ Drone/sim disconnected: {e}")
+                    print(f"Drone/sim disconnected: {e}")
                     conn.close()
                     break
                 except socket.timeout:
@@ -200,12 +217,15 @@ try:
                     raise
 
         except KeyboardInterrupt:
-            print("🛑 Keyboard interrupt. Shutting down...")
+            print("Keyboard interrupt. Shutting down...")
             break
         except Exception as e:
-            print(f"🔥 Unexpected error: {e}")
+            print(f"Unexpected error: {e}")
 finally:
     recv_server.close()
     ghostmap_client.close()
     if SHOW_VIDEO:
         cv2.destroyAllWindows()
+    if packet_index > 0:
+        avg_time = total_processing_time / packet_index
+        print(f"\n✅ Processed {packet_index} frames in {total_processing_time:.2f} seconds (avg: {avg_time:.3f} s/frame)")
