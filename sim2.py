@@ -59,7 +59,7 @@ for txt_file in frame_files:
     client.sendall(header_bytes_padded)
 
     print(f"✅ Packet (no image) sent for: {frame_index}")
-    time.sleep(0.200)
+    time.sleep(0.190)
 
 client.close()
 print("📴 Disconnected.")

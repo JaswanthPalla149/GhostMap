@@ -24,7 +24,7 @@ echo "✅ [OK] Current directory: $(pwd)"
 # === Set absolute paths ===
 GPSVIEWER_EXE="./build/GPSViewer_App.exe"
 PYTHON_SCRIPT="./Main.py"
-SIM_SCRIPT="./sim.py"
+# SIM_SCRIPT="./sim2.py"
 FLAG_PATH="./gps_ready.flag"
 echo "No" > "$FLAG_PATH"
 
@@ -37,7 +37,7 @@ echo "✅ [OK] Python is available in PATH"
 
 # === Check required files ===
 [[ ! -f "$PYTHON_SCRIPT" ]] && { echo "❌ [ERROR] Main.py not found at: $PYTHON_SCRIPT"; exit 1; }
-[[ ! -f "$SIM_SCRIPT" ]] && { echo "❌ [ERROR] sim.py not found at: $SIM_SCRIPT"; exit 1; }
+# [[ ! -f "$SIM_SCRIPT" ]] && { echo "❌ [ERROR] sim.py not found at: $SIM_SCRIPT"; exit 1; }
 [[ ! -f "$GPSVIEWER_EXE" ]] && { echo "❌ [ERROR] GPSViewer.exe not found at: $GPSVIEWER_EXE"; exit 1; }
 echo "✅ [OK] All required files found"
 
@@ -87,20 +87,20 @@ fi
 sleep 2
 
 # === Launch sim.py in background ===
-echo "🚀 [LAUNCH] Starting sim.py..."
-if command -v python &>/dev/null; then
-    python "$SIM_SCRIPT" &
-    SIM_PID=$!
-else
-    py "$SIM_SCRIPT" &
-    SIM_PID=$!
-fi
+# echo "🚀 [LAUNCH] Starting sim.py..."
+# if command -v python &>/dev/null; then
+#    python "$SIM_SCRIPT" &
+#    SIM_PID=$!
+# else
+#    py "$SIM_SCRIPT" &
+#    SIM_PID=$!
+# fi
 
 # === Wait for Main.py to exit ===
 wait $MAIN_PID
 echo "✅ Main.py finished."
 
 # === Kill sim.py if it's still running ===
-kill $SIM_PID 2>/dev/null
+# kill $SIM_PID 2>/dev/null
 
 echo "🎯 [DONE] UAV pipeline completed."

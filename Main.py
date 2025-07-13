@@ -228,4 +228,6 @@ finally:
         cv2.destroyAllWindows()
     if packet_index > 0:
         avg_time = total_processing_time / packet_index
-        print(f"\n✅ Processed {packet_index} frames in {total_processing_time:.2f} seconds (avg: {avg_time:.3f} s/frame)")
+        fps = 1 / avg_time if avg_time > 0 else 0
+        print(f"\n✅ Processed {packet_index} frames in {total_processing_time:.2f} seconds")
+        print(f"📈 Average processing time: {avg_time:.3f} s/frame  |  FPS: {fps:.2f}")

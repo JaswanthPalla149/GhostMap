@@ -22,43 +22,50 @@ void TcpServer::onNewConnection() {
         QByteArray data = socket->readAll();
         qDebug() << "📩 Received raw data:" << data;
 
-        QJsonParseError parseError;
-        QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-        if (parseError.error != QJsonParseError::NoError) {
-            qWarning() << "❌ JSON parse error:" << parseError.errorString();
-            return;
+        QList<QByteArray> packets = data.split('\n');  // Split by newline
+        QVariantList latestValidList;
+
+        for (const QByteArray &packet : packets) {
+            if (packet.trimmed().isEmpty())
+                continue;
+
+            QJsonParseError parseError;
+            QJsonDocument doc = QJsonDocument::fromJson(packet, &parseError);
+
+            if (parseError.error == QJsonParseError::NoError) {
+                QJsonArray arr;
+                if (doc.isObject()) {
+                    arr = doc.object().value("detections").toArray(); // if "detections" wrapped
+                } else if (doc.isArray()) {
+                    arr = doc.array(); // raw array
+                }
+
+                QVariantList list;
+                for (const QJsonValue &val : arr) {
+                    QJsonObject obj = val.toObject();
+                    QVariantMap m;
+                    m["class_id"] = obj["class_id"].toString();
+                    m["lat"] = obj["lat"].toDouble();
+                    m["lon"] = obj["lon"].toDouble();
+                    list.append(m);
+                    qDebug() << "📍 Parsed GPS:" << m;
+                }
+
+                // Save this one — it's the most recent valid array
+                latestValidList = list;
+            } else {
+                qWarning() << "❌ JSON parse error:" << parseError.errorString();
+            }
         }
 
-        QVariantList list;
-        QJsonArray arr;
-
-        // Accept either nested JSON object with "detections" field or raw array
-        if (doc.isObject()) {
-            arr = doc.object().value("detections").toArray();
-        } else if (doc.isArray()) {
-            arr = doc.array();
+        // Update UI only if we got something valid
+        if (!latestValidList.isEmpty()) {
+            m_gpsList = latestValidList;
+            emit gpsListChanged();
+            qDebug() << "📤 Updated gpsList with" << latestValidList.size() << "items.";
         }
-
-        for (const auto &val : arr) {
-            QJsonObject obj = val.toObject();
-            QVariantMap m;
-            m["class_id"] = obj["class_id"].toString();
-            m["lat"] = obj["lat"].toDouble();
-            m["lon"] = obj["lon"].toDouble();
-
-            qDebug() << "👉 Raw JSON object:" << obj;
-            qDebug() << "✅ class_id:" << obj["class_id"].toString();
-            qDebug() << "✅ lat:" << obj["lat"].toDouble();
-            qDebug() << "✅ lon:" << obj["lon"].toDouble();
-            list.append(m);
-            qDebug() << "📍 Parsed GPS:" << m;
-        }
-
-        // Store data in member variable for QML access
-        m_gpsList = list;
-        emit gpsListChanged(); // Notify QML of property change
-        qDebug() << "📤 Updated gpsList with" << list.size() << "items.";
     });
+
 
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 }
